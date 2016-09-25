@@ -1,0 +1,110 @@
+<html>
+  <head>
+    <style>
+    body {
+      background-color: black;
+    }
+    .text {
+      color: white;
+    }
+
+    .primary-btn {
+      width: 100px;
+    }
+
+    .automata {
+      display: flex;
+      flex-direction: column;
+    }
+
+    canvas {
+      align-self: center;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .col {
+      flex-grow: 1;
+    }
+
+    .top {
+      margin: 5px;
+      vertical-align: middle;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: row;
+      padding: 10px 100px 10px 100px;
+    }
+
+    .btn {
+      margin-right: 10px;
+      width: 100px;
+      background: #2574A9;
+      border-bottom: #16a085 1px solid;
+      border-left: #16a085 1px solid;
+      border-right: #16a085 1px solid;
+      border-radius: 3px;
+      text-align: center;
+      color: white;
+      padding: 5px;
+      float: left;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .cell {
+      height: 5px;
+      width: 5px;
+    }
+
+    .rule {
+      width: 50px;
+    }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="automata">
+      <div class="nav">
+        <div class="col">
+          <div class="top">
+            <span class="text">Fill percent</span><input type="range" min=0 max=100 name="fillPercent" value="5"></input>
+          </div>
+          <button onclick="automata.clearMap(automata.map)" class="btn">Clear</button>
+          <button onclick="automata.randomMap(automata.map)" class="btn">Randomize</button>
+        </div>
+        <div class="col">
+          <div class="top">
+            <span class="text">Generate 1D Automata (Random if empty)</span></input>
+          </div>
+          <button onclick="automata.automata()" class="btn">Generate pattern</button>
+          <input type="number" min="0" max="255" name="rule" class="rule"><span class="text">0-255</span></input>
+        </div>
+        <div class="controls col">
+          <div class="top">
+            <span class="text">Conway's Game of Life Controls</span>
+          </div>
+          <button onclick="automata.gol()" class="btn">Go!</button>
+          <button onclick="automata.stop()" class="btn">Stop</button>
+          <button onclick="automata.conwayRules(automata.map)" class="btn">Step</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </body>
+
+  <script type="text/javascript" src="automata.js"></script>
+  <!-- <script type="text/javascript" src="calculations.js"></script> -->
+
+</html>
