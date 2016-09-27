@@ -227,7 +227,7 @@ let automata = (() => {
     canvas.width = w * 0.9;
     canvas.height = h * 0.9;
     ctx = canvas.getContext('2d');
-    gridSize = 4;
+    gridSize = 1;
     width = canvas.width / gridSize;
     height = canvas.height / gridSize;
 
