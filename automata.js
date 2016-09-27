@@ -3,14 +3,11 @@ let automata = (() => {
 
   let canvas;
   let ctx;
-  let w;
-  let h;
   let map = [];
   let fillPercent;
   let width;
   let height;
-  let gridSize;
-  let fit = 0;
+
   let requestId;
   let draw = false;
   let column;
@@ -18,8 +15,17 @@ let automata = (() => {
   let prevX;
   let prevY;
 
-  const activeColor = '#4B77BE';
-  const inactiveColor = '#111111';
+  const GRID_SIZE = 1;
+  const ACTIVE_COLOR = '#F89406';
+  const INACTIVE_COLOR = '#1F3A93';
+
+  Array.prototype.get = function (i, j) {
+    return this[(i * this.width) + j];
+  };
+
+  Array.prototype.setwidth = function (w) {
+    this.width = w;
+  };
 
   // Used for creating a random ruleset for Cellular Automata
   function random(min, max) {
@@ -71,7 +77,6 @@ let automata = (() => {
   function processAllRows(array) {
     let ruleSet = getRuleFromUser();
     if (isNaN(ruleSet[7])) {
-      console.log('Empty form or value grater than 255!');
       ruleSet = createRandomRuleset();
     }
 
@@ -86,25 +91,35 @@ let automata = (() => {
       [0, 0, 0],
     ];
 
-    for (let row = 1; row < array.length - 1; row++) {
-      for (let column = 1; column < array[row].length - 1; column++) {
-        let target = [row, column];
-        let prevSelf = array[row - 1][column];
-        let leftSibling = array[row - 1][column - 1];
-        let rightSibling = array[row - 1][column + 1];
+    let row;
+    let column;
+    let target;
+    let prevSelf;
+    let leftSibling;
+    let rightSibling;
+    let state;
+    let arrayLength = array.length - 1;
 
-        for (let state = 0; state < 8; state++) {
+    for (row = 1; row < arrayLength; row++) {
+      for (column = 1; column < array[row].length - 1; column++) {
+        target = [row, column];
+        prevSelf = array[row - 1][column];
+        leftSibling = array[row - 1][column - 1];
+        rightSibling = array[row - 1][column + 1];
+
+        for (state = 0; state < 8; state++) {
           if (leftSibling === previousRowPixelStates[state][0] &&
             prevSelf === previousRowPixelStates[state][1] &&
             rightSibling === previousRowPixelStates[state][2]
           ) {
             array[row][column] = ruleSet[state];
+            break;
           }
         }
       }
     }
 
-    renderAllCells(array, gridSize);
+    renderAllCells(array, GRID_SIZE);
   }
 
   // ran once - performance not important
@@ -114,9 +129,11 @@ let automata = (() => {
 
   // ran once - performance not important
   function randomFillMap(array) {
-    for (let x = 0; x < height; x++) {
+    let x;
+    let y;
+    for (x = 0; x < height; x++) {
       array[x] = [];
-      for (let y = 0; y < width; y++) {
+      for (y = 0; y < width; y++) {
         array[x][y] = (getRandom(0, 100) < fillPercent) ? 1 : 0;
       }
     }
@@ -125,9 +142,11 @@ let automata = (() => {
   }
 
   function clearMap(array) {
-    for (let x = 0; x < height; x++) {
-      array[x] = [];
-      for (let y = 0; y < width; y++) {
+    let x;
+    let y;
+
+    for (x = 0; x < height; x++) {
+      for (y = 0; y < width; y++) {
         if (x === 0 && y === Math.floor(width / 2)) {
           array[x][y] = 1;
         } else {
@@ -136,32 +155,39 @@ let automata = (() => {
       }
     }
 
-    renderAllCells(array, gridSize);
+    renderAllCells(array, GRID_SIZE);
     return array;
   }
 
   // ran once - performance not important
-  function renderAllCells(array, gridSize) {
-    let color;
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        array[y][x] ? color = activeColor : color = inactiveColor;
+  function renderAllCells(array, GRID_SIZE) {
+    let x;
+    let y;
+
+    for (x = 0; x < width; x++) {
+      for (y = 0; y < height; y++) {
         drawCellState(x, y, array[y][x]);
       }
     }
   }
 
   function drawCellState(x, y, state) {
-    state ? ctx.fillStyle = activeColor : ctx.fillStyle = inactiveColor;
-    ctx.fillRect(x * gridSize, y * gridSize,  gridSize, gridSize);
+    state ? ctx.fillStyle = ACTIVE_COLOR : ctx.fillStyle = INACTIVE_COLOR;
+    ctx.fillRect(x * GRID_SIZE, y * GRID_SIZE,  GRID_SIZE, GRID_SIZE);
   }
 
   function getSurroundingWallcount(array, gridX, gridY) {
     let wallCount = 0;
-    for (let neighbourX = gridX - 1; neighbourX <= gridX + 1; neighbourX++) {
-      for (let neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++) {
+    let neighbourX;
+    let neighbourY;
+
+    for (neighbourX = gridX - 1; neighbourX <= gridX + 1; neighbourX++) {
+      for (neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++) {
         if (neighbourX != gridX || neighbourY != gridY) {
+          if (wallCount > 3) { break; };
+
           wallCount += array[neighbourX][neighbourY];
+
         }
       }
     }
@@ -171,10 +197,14 @@ let automata = (() => {
 
   function conwayRules(array) {
     let queue = [];
-    for (let row = 1; row < height - 1; row++) {
-      for (let column = 1; column < width - 1; column++) {
+    let row;
+    let column;
+    let neighbourWallTiles;
 
-        let neighbourWallTiles = getSurroundingWallcount(array, row, column);
+    for (row = 1; row < height - 1; row++) {
+      for (column = 1; column < width - 1; column++) {
+
+        neighbourWallTiles = getSurroundingWallcount(array, row, column);
 
         if (array[row][column] === 1) {
           if (neighbourWallTiles < 2) {
@@ -190,7 +220,7 @@ let automata = (() => {
               state: 0,
             });
           }
-        } else if (array[row][column] === 0) {
+        } else {
           if (neighbourWallTiles === 3) {
             queue.push({
               x: row,
@@ -211,7 +241,7 @@ let automata = (() => {
   function randomMap(array) {
     fillPercent = parseInt(document.getElementsByName('fillPercent')[0].value);
     randomFillMap(array);
-    renderAllCells(array, gridSize);
+    renderAllCells(array, GRID_SIZE);
   }
 
   function drawing(column, row) {
@@ -222,14 +252,13 @@ let automata = (() => {
 
   function main() {
     canvas = document.createElement('canvas');
-    w = window.innerWidth;
-    h = window.innerHeight;
+    let w = window.innerWidth;
+    let h = window.innerHeight;
     canvas.width = w * 0.9;
     canvas.height = h * 0.9;
     ctx = canvas.getContext('2d');
-    gridSize = 4;
-    width = canvas.width / gridSize;
-    height = canvas.height / gridSize;
+    width = canvas.width / GRID_SIZE;
+    height = canvas.height / GRID_SIZE;
 
     let drawnCells = [];
 
@@ -237,8 +266,8 @@ let automata = (() => {
 
     canvas.addEventListener('mousedown', () => {
       event.preventDefault();
-      column = Math.floor((event.clientX - canvas.offsetLeft) / gridSize);
-      row = Math.floor((event.clientY - canvas.offsetTop) / gridSize);
+      column = Math.floor((event.clientX - canvas.offsetLeft) / GRID_SIZE);
+      row = Math.floor((event.clientY - canvas.offsetTop) / GRID_SIZE);
       drawnCells.push(column + '_' + row);
       drawing(column, row);
       draw = true;
@@ -254,8 +283,8 @@ let automata = (() => {
     });
 
     canvas.addEventListener('mousemove', (event) => {
-      column = Math.floor((event.clientX - canvas.offsetLeft) / gridSize);
-      row = Math.floor((event.clientY - canvas.offsetTop) / gridSize);
+      column = Math.floor((event.clientX - canvas.offsetLeft) / GRID_SIZE);
+      row = Math.floor((event.clientY - canvas.offsetTop) / GRID_SIZE);
       if (draw && drawnCells.indexOf(column + '_' + row) === -1) {
         drawnCells.push(column + '_' + row);
         drawing(column, row);
@@ -263,13 +292,13 @@ let automata = (() => {
     });
 
     fillPercent = parseInt(document.getElementsByName('fillPercent')[0].value);
+
     randomFillMap(map);
-    renderAllCells(map, gridSize);
+    renderAllCells(map, GRID_SIZE);
   }
 
   function automata() {
     processAllRows(map);
-    renderAllCells(map, gridSize);
   }
 
   function stop() {
