@@ -15,7 +15,7 @@ let automata = (() => {
   let prevX;
   let prevY;
 
-  const GRID_SIZE = 1;
+  const GRID_SIZE = 4;
   const ACTIVE_COLOR = '#F89406';
   const INACTIVE_COLOR = '#1F3A93';
 
